@@ -11,13 +11,21 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { ComponentProps, useCallback, useMemo, useState } from "react";
+import {
+  ComponentProps,
+  useCallback,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+
+const AVATAR_SIZE = 148;
 
 type ProfileState = {
   email: string;
@@ -38,7 +46,10 @@ export default function ProfileScreen() {
 
   const [email, setEmail] = useState(MOCK_PROFILE.email);
   const [displayName, setDisplayName] = useState(MOCK_PROFILE.displayName);
-  const [photo, setPhoto] = useState<string | undefined>(MOCK_PROFILE.photoUrl);
+  const [photo, setPhoto] = useState<string | null>(
+    MOCK_PROFILE.photoUrl ?? null,
+  );
+  const photoKeyRef = useRef(0);
   const [isSaving, setIsSaving] = useState(false);
 
   const initials = useMemo(() => {
@@ -49,6 +60,18 @@ export default function ProfileScreen() {
       .slice(0, 2)
       .join("");
   }, [displayName]);
+
+  const getAssetUri = useCallback(
+    (asset: ImagePicker.ImagePickerAsset | undefined) => {
+      if (!asset) return null;
+      if (asset.base64) {
+        const mime = asset.mimeType ?? "image/jpeg";
+        return `data:${mime};base64,${asset.base64}`;
+      }
+      return asset.uri ?? null;
+    },
+    [],
+  );
 
   const requestPermission = useCallback(async (type: "camera" | "library") => {
     if (type === "camera") {
@@ -80,11 +103,18 @@ export default function ProfileScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.85,
+      base64: true,
+      exif: false,
     });
-    if (!result.canceled) {
-      setPhoto(result.assets[0]?.uri);
+    if (!result.canceled && result.assets?.length) {
+      const asset = result.assets[0];
+      const uri = getAssetUri(asset);
+      if (uri) {
+        photoKeyRef.current += 1;
+        setPhoto(uri);
+      }
     }
-  }, [requestPermission]);
+  }, [getAssetUri, requestPermission]);
 
   const handleTakePhoto = useCallback(async () => {
     if (!(await requestPermission("camera"))) return;
@@ -92,11 +122,18 @@ export default function ProfileScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.85,
+      base64: true,
+      exif: false,
     });
-    if (!result.canceled) {
-      setPhoto(result.assets[0]?.uri);
+    if (!result.canceled && result.assets?.length) {
+      const asset = result.assets[0];
+      const uri = getAssetUri(asset);
+      if (uri) {
+        photoKeyRef.current += 1;
+        setPhoto(uri);
+      }
     }
-  }, [requestPermission]);
+  }, [getAssetUri, requestPermission]);
 
   const handleChangePhoto = () => {
     if (Platform.OS === "ios") {
@@ -137,6 +174,13 @@ export default function ProfileScreen() {
 
   const inputBackground =
     colorScheme === "dark" ? "rgba(255,255,255,0.08)" : "#f4f4f5";
+  const avatarThemeStyles = useMemo(() => {
+    const isDark = colorScheme === "dark";
+    return {
+      borderColor: isDark ? "rgba(255,255,255,0.35)" : "rgba(15,23,42,0.15)",
+      backgroundColor: isDark ? "rgba(148,163,184,0.18)" : "#f1f5f9",
+    };
+  }, [colorScheme]);
 
   return (
     <ThemedView className="flex-1">
@@ -156,41 +200,52 @@ export default function ProfileScreen() {
           </ThemedText>
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, styles.avatarCard]}>
+          <View style={[styles.avatarShell, avatarThemeStyles]}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleChangePhoto}
+              style={({ pressed }) => [
+                styles.avatarPressable,
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              {photo ? (
+                <Image
+                  key={`${photoKeyRef.current}`}
+                  source={{ uri: photo }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <View style={styles.initialsCircle}>
+                  <ThemedText
+                    type="title"
+                    lightColor={palette.text}
+                    darkColor={palette.text}
+                  >
+                    {initials || "?"}
+                  </ThemedText>
+                  <ThemedText className="text-sm text-gray-500">
+                    Add photo
+                  </ThemedText>
+                </View>
+              )}
+            </Pressable>
+          </View>
           <Pressable
             accessibilityRole="button"
             onPress={handleChangePhoto}
             style={({ pressed }) => [
-              styles.avatarButton,
-              pressed && styles.pressed,
+              styles.changePhotoButton,
               {
-                backgroundColor:
-                  colorScheme === "dark" ? "rgba(255,255,255,0.08)" : "#e4e4e7",
+                backgroundColor: colorScheme === "dark" ? "#2f2f37" : "#e2e8f0",
+                borderColor:
+                  colorScheme === "dark" ? "rgba(255,255,255,0.15)" : "#cbd5f5",
+                opacity: pressed ? 0.85 : 1,
               },
             ]}
           >
-            {photo ? (
-              <Image source={{ uri: photo }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.initialsCircle}>
-                <ThemedText
-                  type="title"
-                  lightColor={palette.text}
-                  darkColor={palette.text}
-                >
-                  {initials || "?"}
-                </ThemedText>
-              </View>
-            )}
-            <View style={styles.avatarOverlay}>
-              <ThemedText
-                type="defaultSemiBold"
-                lightColor="#fff"
-                darkColor="#fff"
-              >
-                Change photo
-              </ThemedText>
-            </View>
+            <ThemedText type="defaultSemiBold">Change photo</ThemedText>
           </Pressable>
           <ThemedText className="text-gray-500 dark:text-gray-300 text-center">
             Tap the avatar to take a new picture or pick one from your gallery.
@@ -302,33 +357,45 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: "rgba(148,163,184,0.1)",
   },
-  avatarButton: {
-    width: 140,
-    height: 140,
-    borderRadius: 999,
-    alignSelf: "center",
+  avatarCard: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
+  avatarShell: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
     overflow: "hidden",
+    borderWidth: 2,
+    marginBottom: 12,
     justifyContent: "center",
     alignItems: "center",
+  },
+  avatarPressable: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  changePhotoButton: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
   },
   avatarImage: {
-    width: "100%",
-    height: "100%",
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
+    resizeMode: "cover",
   },
   initialsCircle: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-  },
-  avatarOverlay: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    paddingVertical: 8,
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    gap: 4,
   },
   pressed: {
     opacity: 0.85,
