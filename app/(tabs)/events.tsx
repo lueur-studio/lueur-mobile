@@ -1,15 +1,6 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,16 +8,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-
-type Event = {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  attendees: number;
-  isJoined: boolean;
-  location: string;
-};
+import EventCard from "@/features/events/component/EventCard/EventCard";
+import { Event } from "@/features/events/types";
 
 const MOCK_EVENTS: Event[] = [
   {
@@ -89,10 +72,7 @@ export default function EventsScreen() {
     fetchEvents();
   }, [fetchEvents]);
 
-  const joinedEvents = useMemo(
-    () => events.filter((event) => event.isJoined),
-    [events],
-  );
+  const joinedEvents = useMemo(() => events.filter((event) => event.isJoined), [events]);
 
   const handleJoinViaLink = useCallback(
     (link: string) => {
@@ -150,17 +130,8 @@ export default function EventsScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <MaterialCommunityIcons
-              name="qrcode-scan"
-              size={24}
-              color="#fff"
-            />
-            <ThemedText
-              type="subtitle"
-              lightColor="#fff"
-              darkColor="#fff"
-              style={styles.actionLabel}
-            >
+            <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+            <ThemedText type="subtitle" lightColor="#fff" darkColor="#fff" style={styles.actionLabel}>
               Join Event
             </ThemedText>
             <ThemedText lightColor="#f8fafc" darkColor="#f8fafc">
@@ -174,17 +145,12 @@ export default function EventsScreen() {
             style={({ pressed }) => [
               styles.createButton,
               {
-                borderColor:
-                  colorScheme === "dark" ? "rgba(255,255,255,0.2)" : "#CBD5F5",
+                borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.2)" : "#CBD5F5",
               },
               pressed && styles.pressed,
             ]}
           >
-            <MaterialCommunityIcons
-              name="calendar-plus"
-              size={24}
-              color={palette.text}
-            />
+            <MaterialCommunityIcons name="calendar-plus" size={24} color={palette.text} />
             <ThemedText type="subtitle" style={styles.actionLabel}>
               Create Event
             </ThemedText>
@@ -205,11 +171,7 @@ export default function EventsScreen() {
           {isLoading ? (
             <ActivityIndicator size="large" color={palette.tint} />
           ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
-            >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
               {events.map((event) => (
                 <EventCard
                   key={event.id}
@@ -229,8 +191,7 @@ export default function EventsScreen() {
               style={[
                 styles.joinedCard,
                 {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
+                  backgroundColor: colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
                 },
               ]}
             >
@@ -241,14 +202,11 @@ export default function EventsScreen() {
               style={[
                 styles.joinedCard,
                 {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
+                  backgroundColor: colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
                 },
               ]}
             >
-              <ThemedText className="text-gray-500 dark:text-gray-300">
-                Events you join will appear here.
-              </ThemedText>
+              <ThemedText className="text-gray-500 dark:text-gray-300">Events you join will appear here.</ThemedText>
             </View>
           ) : (
             joinedEvents.map((event) => (
@@ -257,8 +215,7 @@ export default function EventsScreen() {
                 style={[
                   styles.joinedCard,
                   {
-                    backgroundColor:
-                      colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
+                    backgroundColor: colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
                   },
                 ]}
               >
@@ -267,9 +224,7 @@ export default function EventsScreen() {
                   <ThemedText className="text-gray-500 dark:text-gray-300">
                     {formatEventDate(event.date)} • {event.location}
                   </ThemedText>
-                  <ThemedText className="text-gray-500 dark:text-gray-300">
-                    {event.attendees} attendees
-                  </ThemedText>
+                  <ThemedText className="text-gray-500 dark:text-gray-300">{event.attendees} attendees</ThemedText>
                 </View>
                 <Pressable
                   style={styles.secondaryButton}
@@ -299,49 +254,6 @@ export default function EventsScreen() {
   );
 }
 
-type EventCardProps = {
-  event: Event;
-  palette: (typeof Colors)["light"];
-  onPress: () => void;
-};
-
-function EventCard({ event, palette, onPress }: EventCardProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        { borderColor: palette.tint },
-        pressed && styles.pressed,
-      ]}
-    >
-      <View style={styles.cardBadge}>
-        <ThemedText
-          lightColor="#fff"
-          darkColor="#fff"
-          style={styles.cardBadgeText}
-        >
-          {event.attendees} joined
-        </ThemedText>
-      </View>
-      <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
-        {event.title}
-      </ThemedText>
-      <ThemedText className="text-gray-600 dark:text-gray-300">
-        {event.description}
-      </ThemedText>
-      <View style={styles.cardFooter}>
-        <ThemedText className="text-gray-500 dark:text-gray-300">
-          {formatEventDate(event.date)}
-        </ThemedText>
-        <ThemedText className="text-gray-500 dark:text-gray-300">
-          {event.location}
-        </ThemedText>
-      </View>
-    </Pressable>
-  );
-}
-
 type JoinEventModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -350,13 +262,7 @@ type JoinEventModalProps = {
   colorScheme: "light" | "dark";
 };
 
-function JoinEventModal({
-  visible,
-  onClose,
-  onJoinLink,
-  palette,
-  colorScheme,
-}: JoinEventModalProps) {
+function JoinEventModal({ visible, onClose, onJoinLink, palette, colorScheme }: JoinEventModalProps) {
   const [inviteLink, setInviteLink] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -384,8 +290,7 @@ function JoinEventModal({
           style={[
             styles.modalContent,
             {
-              backgroundColor:
-                colorScheme === "dark" ? "#181a1f" : "#fff",
+              backgroundColor: colorScheme === "dark" ? "#181a1f" : "#fff",
             },
           ]}
         >
@@ -400,25 +305,13 @@ function JoinEventModal({
             style={({ pressed }) => [
               styles.qrButton,
               {
-                borderColor:
-                  colorScheme === "dark"
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(15,23,42,0.1)",
+                borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)",
               },
               pressed && styles.pressed,
             ]}
-            onPress={() =>
-              Alert.alert(
-                "Camera coming soon",
-                "The QR scanner is being wired up with the camera team.",
-              )
-            }
+            onPress={() => Alert.alert("Camera coming soon", "The QR scanner is being wired up with the camera team.")}
           >
-            <MaterialCommunityIcons
-              name="camera"
-              size={22}
-              color={palette.tint}
-            />
+            <MaterialCommunityIcons name="camera" size={22} color={palette.tint} />
             <View className="flex-1">
               <ThemedText type="defaultSemiBold">Scan QR code</ThemedText>
               <ThemedText className="text-gray-500 dark:text-gray-300">
@@ -428,9 +321,7 @@ function JoinEventModal({
           </Pressable>
 
           <View className="gap-2">
-            <ThemedText type="defaultSemiBold">
-              Or paste the invite link
-            </ThemedText>
+            <ThemedText type="defaultSemiBold">Or paste the invite link</ThemedText>
             <TextInput
               value={inviteLink}
               onChangeText={(text) => {
@@ -444,17 +335,12 @@ function JoinEventModal({
               style={[
                 styles.input,
                 {
-                  borderColor:
-                    colorScheme === "dark"
-                      ? "rgba(255,255,255,0.1)"
-                      : "rgba(15,23,42,0.1)",
+                  borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)",
                   color: palette.text,
                 },
               ]}
             />
-            {error ? (
-              <ThemedText className="text-red-500">{error}</ThemedText>
-            ) : null}
+            {error ? <ThemedText className="text-red-500">{error}</ThemedText> : null}
             <Pressable
               style={({ pressed }) => [
                 styles.primaryButton,
@@ -463,20 +349,13 @@ function JoinEventModal({
               ]}
               onPress={handleLinkJoin}
             >
-              <ThemedText
-                type="defaultSemiBold"
-                lightColor="#fff"
-                darkColor="#fff"
-              >
+              <ThemedText type="defaultSemiBold" lightColor="#fff" darkColor="#fff">
                 Join with link
               </ThemedText>
             </Pressable>
           </View>
 
-          <Pressable
-            style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
-            onPress={onClose}
-          >
+          <Pressable style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]} onPress={onClose}>
             <ThemedText type="link">Cancel</ThemedText>
           </Pressable>
         </View>
