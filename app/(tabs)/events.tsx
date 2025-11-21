@@ -10,6 +10,7 @@ import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import EventCard from "@/features/events/component/EventCard/EventCard";
 import { Event } from "@/features/events/types";
+import JoinEventModal from "@/features/events/component/JoinEventModal/JoinEventModal";
 
 const MOCK_EVENTS: Event[] = [
   {
@@ -251,116 +252,6 @@ export default function EventsScreen() {
         colorScheme={colorScheme}
       />
     </ThemedView>
-  );
-}
-
-type JoinEventModalProps = {
-  visible: boolean;
-  onClose: () => void;
-  onJoinLink: (link: string) => void;
-  palette: (typeof Colors)["light"];
-  colorScheme: "light" | "dark";
-};
-
-function JoinEventModal({ visible, onClose, onJoinLink, palette, colorScheme }: JoinEventModalProps) {
-  const [inviteLink, setInviteLink] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!visible) {
-      setInviteLink("");
-      setError(null);
-    }
-  }, [visible]);
-
-  const placeholderColor = colorScheme === "dark" ? "#94A3B8" : "#94A3B8";
-
-  const handleLinkJoin = () => {
-    if (!inviteLink.trim()) {
-      setError("Please paste the invitation URL.");
-      return;
-    }
-    onJoinLink(inviteLink.trim());
-  };
-
-  return (
-    <Modal animationType="slide" visible={visible} transparent>
-      <View style={styles.modalBackdrop}>
-        <View
-          style={[
-            styles.modalContent,
-            {
-              backgroundColor: colorScheme === "dark" ? "#181a1f" : "#fff",
-            },
-          ]}
-        >
-          <View className="gap-1">
-            <ThemedText type="subtitle">Join an event</ThemedText>
-            <ThemedText className="text-gray-500 dark:text-gray-300">
-              Choose how you&apos;d like to join the event shared with you.
-            </ThemedText>
-          </View>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.qrButton,
-              {
-                borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)",
-              },
-              pressed && styles.pressed,
-            ]}
-            onPress={() => Alert.alert("Camera coming soon", "The QR scanner is being wired up with the camera team.")}
-          >
-            <MaterialCommunityIcons name="camera" size={22} color={palette.tint} />
-            <View className="flex-1">
-              <ThemedText type="defaultSemiBold">Scan QR code</ThemedText>
-              <ThemedText className="text-gray-500 dark:text-gray-300">
-                Opens your camera to scan an event invite.
-              </ThemedText>
-            </View>
-          </Pressable>
-
-          <View className="gap-2">
-            <ThemedText type="defaultSemiBold">Or paste the invite link</ThemedText>
-            <TextInput
-              value={inviteLink}
-              onChangeText={(text) => {
-                setInviteLink(text);
-                setError(null);
-              }}
-              placeholder="https://events.lueur.app/invite/ABC123"
-              placeholderTextColor={placeholderColor}
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={[
-                styles.input,
-                {
-                  borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)",
-                  color: palette.text,
-                },
-              ]}
-            />
-            {error ? <ThemedText className="text-red-500">{error}</ThemedText> : null}
-            <Pressable
-              style={({ pressed }) => [
-                styles.primaryButton,
-                { backgroundColor: palette.tint },
-                pressed && styles.pressed,
-              ]}
-              onPress={handleLinkJoin}
-            >
-              <ThemedText type="defaultSemiBold" lightColor="#fff" darkColor="#fff">
-                Join with link
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <Pressable style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]} onPress={onClose}>
-            <ThemedText type="link">Cancel</ThemedText>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
   );
 }
 
