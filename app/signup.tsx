@@ -15,17 +15,25 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
-// same todo comments as signup.tsx
-export default function LoginScreen() {
-  const { signin, isLoading, error, clearError, isAuthenticated } = useAuth();
+// TODO:
+// 1. Password must be strength validated (uppercase, number, special char)
+// 2. Display password strength meter
+// 3. Make sure password strength validation is consistent with backend rules
+// 4. Optimize the component - ex: useRef for form fields
+export default function SignupScreen() {
+  const { signup, isLoading, error, clearError, isAuthenticated } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [formErrors, setFormErrors] = useState({
+    name: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
 
   useEffect(() => {
@@ -42,10 +50,20 @@ export default function LoginScreen() {
 
   const validateForm = () => {
     const errors = {
+      name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     };
     let isValid = true;
+
+    if (!name.trim()) {
+      errors.name = "Name is required";
+      isValid = false;
+    } else if (name.trim().length < 2) {
+      errors.name = "Name must be at least 2 characters";
+      isValid = false;
+    }
 
     if (!email.trim()) {
       errors.email = "Email is required";
@@ -58,21 +76,36 @@ export default function LoginScreen() {
     if (!password) {
       errors.password = "Password is required";
       isValid = false;
+    } else if (password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = "Please confirm your password";
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+      isValid = false;
     }
 
     setFormErrors(errors);
     return isValid;
   };
 
-  const handleSignin = async () => {
+  const handleSignup = async () => {
     if (!validateForm()) {
       return;
     }
 
     try {
-      await signin({ email: email.trim(), password });
+      await signup({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
     } catch (err: any) {
-      Alert.alert("Login Failed", err.message || "Please try again");
+      Alert.alert("Signup Failed", err.message || "Please try again");
     }
   };
 
@@ -81,9 +114,9 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={[styles.content, isDark ? styles.contentDark : styles.contentLight]}>
           <View style={styles.header}>
-            <Text style={[styles.title, isDark ? styles.titleDark : styles.titleLight]}>Welcome Back</Text>
+            <Text style={[styles.title, isDark ? styles.titleDark : styles.titleLight]}>Create Account</Text>
             <Text style={[styles.subtitle, isDark ? styles.subtitleDark : styles.subtitleLight]}>
-              Sign in to continue
+              Sign up to get started
             </Text>
           </View>
           {error && (
@@ -92,6 +125,21 @@ export default function LoginScreen() {
             </View>
           )}
           <View style={styles.form}>
+            <Input
+              label="Full Name"
+              placeholder="Enter your full name"
+              value={name}
+              onChangeText={(text) => {
+                setName(text);
+                if (formErrors.name) {
+                  setFormErrors({ ...formErrors, name: "" });
+                }
+                if (error) clearError();
+              }}
+              error={formErrors.name}
+              autoCapitalize="words"
+              autoComplete="name"
+            />
             <Input
               label="Email"
               placeholder="Enter your email"
@@ -110,7 +158,7 @@ export default function LoginScreen() {
             />
             <Input
               label="Password"
-              placeholder="Enter your password"
+              placeholder="Create a password"
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
@@ -122,16 +170,32 @@ export default function LoginScreen() {
               error={formErrors.password}
               secureTextEntry
               autoCapitalize="none"
-              autoComplete="password"
+              autoComplete="password-new"
             />
-            <Button title="Sign In" onPress={handleSignin} isLoading={isLoading} disabled={isLoading} />
+            <Input
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                if (formErrors.confirmPassword) {
+                  setFormErrors({ ...formErrors, confirmPassword: "" });
+                }
+                if (error) clearError();
+              }}
+              error={formErrors.confirmPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password-new"
+            />
+            <Button title="Sign Up" onPress={handleSignup} isLoading={isLoading} disabled={isLoading} />
           </View>
           <View style={styles.footer}>
             <Text style={[styles.footerText, isDark ? styles.footerTextDark : styles.footerTextLight]}>
-              Don't have an account?{" "}
+              Already have an account?{" "}
             </Text>
-            <TouchableOpacity onPress={() => router.push("/signup")} disabled={isLoading}>
-              <Text style={[styles.link, isDark ? styles.linkDark : styles.linkLight]}>Sign Up</Text>
+            <TouchableOpacity onPress={() => router.push("/login")} disabled={isLoading}>
+              <Text style={[styles.link, isDark ? styles.linkDark : styles.linkLight]}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
