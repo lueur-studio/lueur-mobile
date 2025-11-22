@@ -22,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log("AuthProvider render, user:", user);
+
   // Check authentication status on mount
   useEffect(() => {
     checkAuthStatus();
@@ -36,12 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Try to refresh token to get user data
         const accessToken = await authService.refreshToken();
         if (accessToken) {
-          // TODO: fetch user profile here
-          setUser({
-            id: "",
-            name: "",
-            email: "",
-          });
+          const userProfile = await authService.getUserProfile();
+          if (userProfile) {
+            setUser(userProfile);
+          } else {
+            // If we can't get user profile, clear auth state
+            setUser(null);
+          }
         }
       }
     } catch (error: any) {

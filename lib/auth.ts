@@ -83,6 +83,16 @@ class AuthService {
     }
   }
 
+  async getUserProfile(): Promise<User | null> {
+    try {
+      const response = await api.get("/api/users/me");
+      return response.data.data;
+    } catch (error) {
+      console.error("Get user profile error:", error);
+      return null;
+    }
+  }
+
   async isAuthenticated(): Promise<boolean> {
     const refreshToken = await SecureStore.getItemAsync("refreshToken");
     return !!refreshToken;
