@@ -10,6 +10,7 @@ interface AuthContextType {
   signup: (data: SignupData) => Promise<void>;
   signin: (data: SigninData) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (user: User) => void;
   error: string | null;
   clearError: () => void;
 }
@@ -21,8 +22,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  console.log("AuthProvider render, user:", user);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -100,6 +99,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   const clearError = () => {
     setError(null);
   };
@@ -111,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signup,
     signin,
     logout,
+    updateUser,
     error,
     clearError,
   };
