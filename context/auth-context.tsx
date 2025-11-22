@@ -36,8 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Try to refresh token to get user data
         const accessToken = await authService.refreshToken();
         if (accessToken) {
-          // You might want to fetch user profile here
-          // For now, we'll set a basic user object
+          // TODO: fetch user profile here
           setUser({
             id: "",
             name: "",
