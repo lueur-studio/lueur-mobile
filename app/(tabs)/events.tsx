@@ -1,10 +1,3 @@
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import EventsScreen from "@/features/events/screens/EventsScreen";
 
-export default function EventsScreen() {
-  return (
-    <ThemedView className="flex-1 justify-center items-center">
-      <ThemedText type="title">Events</ThemedText>
-    </ThemedView>
-  );
-}
+export default EventsScreen;
