@@ -1,7 +1,8 @@
 import { ThemedText } from "@/components/themed-text";
+import PrimaryButton from "@/components/ui/PrimaryButton/PrimaryButton";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Modal, Pressable, TextInput, View, StyleSheet, Alert } from "react-native";
 import { useEffect, useState } from "react";
+import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 type JoinEventModalProps = {
   visible: boolean;
@@ -94,15 +95,7 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
             {error ? <ThemedText className="text-red-500">{error}</ThemedText> : null}
 
             {/* JOIN BUTTON */}
-            <Pressable
-              className="rounded-xl py-3 items-center active:opacity-85 bg-[var(--tint)]"
-              style={{ "--tint": palette.tint } as any}
-              onPress={handleLinkJoin}
-            >
-              <ThemedText type="defaultSemiBold" lightColor="#fff" darkColor="#fff">
-                Join with link
-              </ThemedText>
-            </Pressable>
+            <PrimaryButton text="Join with Link" onPress={handleLinkJoin} />
           </View>
 
           {/* CANCEL */}
