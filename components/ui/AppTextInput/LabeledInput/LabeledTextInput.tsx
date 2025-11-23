@@ -18,7 +18,7 @@ const LabeledTextInput = ({
   required = false,
 }: LabeledTextInputProps) => {
   return (
-    <View className="space-y-1">
+    <View className="space-y-2">
       <ThemedText className="font-semibold">
         {label}
         {required && <Text className="text-red-500"> *</Text>}
