@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/ui/ThemedText/ThemedText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 
 const QRButton = () => {
   return (
@@ -18,9 +18,7 @@ const QRButton = () => {
       </View>
       <View className="flex-1 gap-1">
         <ThemedText className="font-semibold">Scan QR Code</ThemedText>
-        <Text className="text-text-muted dark:text-dark-text-muted text-sm">
-          Opens your camera to scan an event invite
-        </Text>
+        <ThemedText textColor="muted">Opens your camera to scan an event invite</ThemedText>
       </View>
     </Pressable>
   );
