@@ -2,14 +2,13 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import EventActionCard from "@/features/events/component/EventActionCard/EventActionCard";
-import EventCard from "@/features/events/component/EventCard/EventCard";
+import EventsList from "@/features/events/component/EventsList/EventsList";
 import JoinEventModal from "@/features/events/component/JoinEventModal/JoinEventModal";
-import NoEventsBanner from "@/features/events/component/NoEventsBanner/NoEventsBanner";
 import { Event } from "@/features/events/types";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const MOCK_EVENTS: Event[] = [
@@ -131,16 +130,7 @@ export default function EventsScreen() {
             onPress={() => router.push("/events/create")}
           />
         </View>
-        <View className="gap-3">
-          <Text className="text-xl font-bold text-gray-900 dark:text-gray-100">Upcoming Events</Text>
-          {isLoading ? (
-            <ActivityIndicator size="small" color={palette.tint} />
-          ) : joinedEvents.length === 0 ? (
-            <NoEventsBanner />
-          ) : (
-            joinedEvents.map((event) => <EventCard event={event} onPress={() => {}} />)
-          )}
-        </View>
+        <EventsList title="Upcoming Events" isLoading={isLoading} events={joinedEvents} />
       </ScrollView>
 
       <JoinEventModal
