@@ -1,8 +1,8 @@
-import { ThemedText } from "@/components/themed-text";
 import CancelButton from "@/components/ui/AppButton/CancelButton/CancelButton";
 import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
 import AppTextInput from "@/components/ui/AppTextInput/AppTextInput";
 import { H2 } from "@/components/ui/Heading/Heading";
+import { ThemedText } from "@/components/ui/ThemedText/ThemedText";
 import { useEffect, useState } from "react";
 import { Modal, View } from "react-native";
 import QRButton from "../QRButton/QRButton";
@@ -40,9 +40,7 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
         <View className="p-6 gap-5 rounded-2xl p-4 bg-ui-background dark:bg-dark-background">
           <View className="gap-1">
             <H2>Join an Event</H2>
-            <ThemedText className="text-gray-500 dark:text-gray-300">
-              Choose how you'd like to join the event shared with you.
-            </ThemedText>
+            <ThemedText>Choose how you'd like to join the event shared with you.</ThemedText>
           </View>
 
           {/* QR BUTTON */}
@@ -50,7 +48,7 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
 
           {/* INPUT BLOCK */}
           <View className="gap-2">
-            <ThemedText type="defaultSemiBold">Or paste the invite link</ThemedText>
+            <ThemedText>Or paste the invite link</ThemedText>
             <AppTextInput
               value={inviteLink}
               placeholder="https://events.lueur.app/invite/ABC123"
