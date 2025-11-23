@@ -1,9 +1,10 @@
 import { ThemedText } from "@/components/themed-text";
 import CancelButton from "@/components/ui/AppButton/CancelButton/CancelButton";
 import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
+import AppTextInput from "@/components/ui/AppTextInput/AppTextInput";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Modal, Pressable, StyleSheet, View } from "react-native";
 
 type JoinEventModalProps = {
   visible: boolean;
@@ -75,21 +76,12 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
           {/* INPUT BLOCK */}
           <View className="gap-2">
             <ThemedText type="defaultSemiBold">Or paste the invite link</ThemedText>
-
-            <TextInput
+            <AppTextInput
               value={inviteLink}
+              placeholder="https://events.lueur.app/invite/ABC123"
               onChangeText={(text) => {
                 setInviteLink(text);
                 setError(null);
-              }}
-              placeholder="https://events.lueur.app/invite/ABC123"
-              placeholderTextColor={placeholderColor}
-              autoCapitalize="none"
-              autoCorrect={false}
-              className="border rounded-xl px-4 py-3 text-base"
-              style={{
-                borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)",
-                color: palette.text,
               }}
             />
 
