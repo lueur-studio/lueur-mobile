@@ -1,5 +1,7 @@
+import { H3 } from "@/components/ui/ThemedText/Heading/Heading";
+import { ThemedText } from "@/components/ui/ThemedText/ThemedText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 type EventActionCardProps = {
   title: string;
@@ -17,8 +19,8 @@ const EventActionCard = ({ title, description, onPress }: EventActionCardProps) 
       <MaterialCommunityIcons name="calendar-plus" size={24} color="currentColor" />
     </View>
 
-    <Text className="text-lg font-semibold text-text-main dark:text-dark-text">{title}</Text>
-    <Text className="text-sm text-text-muted dark:text-dark-textMuted">{description}</Text>
+    <H3>{title}</H3>
+    <ThemedText>{description}</ThemedText>
   </Pressable>
 );
 

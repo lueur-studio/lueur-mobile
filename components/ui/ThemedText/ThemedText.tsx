@@ -1,7 +1,8 @@
+import { ReactNode } from "react";
 import { Text } from "react-native";
 
 type ThemedTextProps = {
-  children: string;
+  children: ReactNode;
   className?: string;
 };
 

@@ -1,7 +1,8 @@
-import { ActivityIndicator, Text, View } from "react-native";
-import NoEventsBanner from "../NoEventsBanner/NoEventsBanner";
+import { H2 } from "@/components/ui/ThemedText/Heading/Heading";
+import { ActivityIndicator, View } from "react-native";
 import { Event } from "../../types";
 import EventCard from "../EventCard/EventCard";
+import NoEventsBanner from "../NoEventsBanner/NoEventsBanner";
 
 type EventsListProps = {
   title: string;
@@ -12,7 +13,7 @@ type EventsListProps = {
 // TODO: Implement onPress for EventCard
 const EventsList = ({ title, isLoading, events }: EventsListProps) => (
   <View className="gap-3">
-    <Text className="text-xl font-bold text-text-main dark:text-dark-text">{title}</Text>
+    <H2>Upcoming Events</H2>
     {isLoading ? (
       <ActivityIndicator size="small" />
     ) : events.length === 0 ? (
