@@ -11,6 +11,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import EventCard from "@/features/events/component/EventCard/EventCard";
 import { Event } from "@/features/events/types";
 import JoinEventModal from "@/features/events/component/JoinEventModal/JoinEventModal";
+import EventActionCard from "@/features/events/component/EventActionCard/EventActionCard";
 
 const MOCK_EVENTS: Event[] = [
   {
@@ -120,47 +121,17 @@ export default function EventsScreen() {
         </View>
 
         <View style={styles.actionRow}>
-          <Pressable
-            accessibilityRole="button"
+          <EventActionCard
+            title="Join Event"
+            description="Scan a QR code or enter a link"
             onPress={() => setJoinModalVisible(true)}
-            style={({ pressed }) => [
-              styles.joinButton,
-              {
-                backgroundColor: palette.tint,
-              },
-              pressed && styles.pressed,
-            ]}
-          >
-            <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
-            <ThemedText type="subtitle" lightColor="#fff" darkColor="#fff" style={styles.actionLabel}>
-              Join Event
-            </ThemedText>
-            <ThemedText lightColor="#f8fafc" darkColor="#f8fafc">
-              Scan a QR code or enter a link
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
+          />
+          <EventActionCard
+            title="Create Event"
+            description="Draft a title, description, and schedule"
             onPress={() => router.push("/events/create")}
-            style={({ pressed }) => [
-              styles.createButton,
-              {
-                borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.2)" : "#CBD5F5",
-              },
-              pressed && styles.pressed,
-            ]}
-          >
-            <MaterialCommunityIcons name="calendar-plus" size={24} color={palette.text} />
-            <ThemedText type="subtitle" style={styles.actionLabel}>
-              Create Event
-            </ThemedText>
-            <ThemedText className="text-gray-500 dark:text-gray-300">
-              Draft a title, description, and schedule.
-            </ThemedText>
-          </Pressable>
+          />
         </View>
-
         <View className="gap-3">
           <ThemedText type="subtitle">Your joined events</ThemedText>
           {isLoading ? (
