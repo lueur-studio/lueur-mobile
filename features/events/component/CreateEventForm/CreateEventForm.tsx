@@ -1,11 +1,9 @@
 import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
-import AppTextInput from "@/components/ui/AppTextInput/AppTextInput";
+import LabeledTextInput from "@/components/ui/AppTextInput/LabeledInput/LabeledTextInput";
 import { H1 } from "@/components/ui/ThemedText/Heading/Heading";
 import { ThemedText } from "@/components/ui/ThemedText/ThemedText";
-import { Colors } from "@/constants/theme";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, useColorScheme, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollView, View } from "react-native";
 
 type CreatedEventSummary = {
   title: string;
@@ -16,10 +14,6 @@ type CreatedEventSummary = {
 };
 
 const CreateEventForm = () => {
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
-  const insets = useSafeAreaInsets();
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
@@ -27,12 +21,12 @@ const CreateEventForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdEvent, setCreatedEvent] = useState<CreatedEventSummary | null>(null);
 
-  function slugify(input: string) {
+  const slugify = (input: string) => {
     return input
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
-  }
+  };
 
   const handleCreateEvent = () => {
     if (!title.trim() || !description.trim() || !date.trim()) {
@@ -66,15 +60,15 @@ const CreateEventForm = () => {
         <ThemedText>Add details so the team can generate the invite link and QR code automatically.</ThemedText>
       </View>
 
-      <View className="space-y-4 mb-6">
-        <AppTextInput value={title} onChangeText={setTitle} />
-        <AppTextInput value={description} onChangeText={setDescription} />
-        <AppTextInput value={date} onChangeText={setDate} />
+      <View className="space-y-3 mb-10">
+        <LabeledTextInput label="Event Title" value={title} onChangeText={setTitle} />
+        <LabeledTextInput label="Description" value={description} onChangeText={setDescription} />
+        <LabeledTextInput label="Date & Time" value={date} onChangeText={setDate} />
       </View>
 
       {error ? <ThemedText className="text-red-500 mb-4">{error}</ThemedText> : null}
 
-      <PrimaryButton text="Create Event" onPress={handleCreateEvent} />
+      <PrimaryButton text="Create Event" onPress={handleCreateEvent} loading={isSubmitting} />
     </ScrollView>
   );
 };
