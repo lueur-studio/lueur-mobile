@@ -11,11 +11,9 @@ type JoinEventModalProps = {
   visible: boolean;
   onClose: () => void;
   onJoinLink: (link: string) => void;
-  palette: { tint: string; text: string };
-  colorScheme: "light" | "dark";
 };
 
-export default function JoinEventModal({ visible, onClose, onJoinLink, palette, colorScheme }: JoinEventModalProps) {
+const JoinEventModal = ({ visible, onClose, onJoinLink }: JoinEventModalProps) => {
   const [inviteLink, setInviteLink] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -43,31 +41,27 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
             <ThemedText>Choose how you'd like to join the event shared with you.</ThemedText>
           </View>
 
-          {/* QR BUTTON */}
           <QRButton />
 
-          {/* INPUT BLOCK */}
           <View className="gap-2">
             <ThemedText>Or paste the invite link</ThemedText>
             <AppTextInput
               value={inviteLink}
-              placeholder="https://events.lueur.app/invite/ABC123"
+              placeholder="https://events.lueur.app/invite/example123"
               onChangeText={(text) => {
                 setInviteLink(text);
                 setError(null);
               }}
             />
-
             {error ? <ThemedText className="text-red-500">{error}</ThemedText> : null}
-
-            {/* JOIN BUTTON */}
             <PrimaryButton text="Join with Link" onPress={handleLinkJoin} />
           </View>
 
-          {/* CANCEL */}
           <CancelButton onPress={onClose} />
         </View>
       </View>
     </Modal>
   );
-}
+};
+
+export default JoinEventModal;
