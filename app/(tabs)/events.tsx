@@ -1,55 +1,54 @@
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import EventCard from "@/features/events/component/EventCard/EventCard";
-import { Event } from "@/features/events/types";
-import JoinEventModal from "@/features/events/component/JoinEventModal/JoinEventModal";
 import EventActionCard from "@/features/events/component/EventActionCard/EventActionCard";
+import EventCard from "@/features/events/component/EventCard/EventCard";
+import JoinEventModal from "@/features/events/component/JoinEventModal/JoinEventModal";
+import NoEventsBanner from "@/features/events/component/NoEventsBanner/NoEventsBanner";
+import { Event } from "@/features/events/types";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const MOCK_EVENTS: Event[] = [
-  {
-    id: "art-walk",
-    title: "Downtown Art Walk",
-    description: "Guided stroll through the new mural collection.",
-    date: "2025-02-12T18:30:00Z",
-    attendees: 42,
-    isJoined: true,
-    location: "Austin, TX",
-  },
-  {
-    id: "coffee-lab",
-    title: "Coffee Lab & Tasting",
-    description: "Learn manual brewing while sampling single-origin beans.",
-    date: "2025-02-17T16:00:00Z",
-    attendees: 58,
-    isJoined: false,
-    location: "Seattle, WA",
-  },
-  {
-    id: "photowalk",
-    title: "Sundown Photowalk",
-    description: "Meet other creators for a golden-hour shoot downtown.",
-    date: "2025-02-22T00:30:00Z",
-    attendees: 31,
-    isJoined: false,
-    location: "Los Angeles, CA",
-  },
-  {
-    id: "makers-hub",
-    title: "Makers Hub Open Studio",
-    description: "Bring your project and pair up with new collaborators.",
-    date: "2025-02-28T21:00:00Z",
-    attendees: 76,
-    isJoined: true,
-    location: "Chicago, IL",
-  },
+  // {
+  //   id: "art-walk",
+  //   title: "Downtown Art Walk",
+  //   description: "Guided stroll through the new mural collection.",
+  //   date: "2025-02-12T18:30:00Z",
+  //   attendees: 42,
+  //   isJoined: true,
+  //   location: "Austin, TX",
+  // },
+  // {
+  //   id: "coffee-lab",
+  //   title: "Coffee Lab & Tasting",
+  //   description: "Learn manual brewing while sampling single-origin beans.",
+  //   date: "2025-02-17T16:00:00Z",
+  //   attendees: 58,
+  //   isJoined: false,
+  //   location: "Seattle, WA",
+  // },
+  // {
+  //   id: "photowalk",
+  //   title: "Sundown Photowalk",
+  //   description: "Meet other creators for a golden-hour shoot downtown.",
+  //   date: "2025-02-22T00:30:00Z",
+  //   attendees: 31,
+  //   isJoined: false,
+  //   location: "Los Angeles, CA",
+  // },
+  // {
+  //   id: "makers-hub",
+  //   title: "Makers Hub Open Studio",
+  //   description: "Bring your project and pair up with new collaborators.",
+  //   date: "2025-02-28T21:00:00Z",
+  //   attendees: 76,
+  //   isJoined: true,
+  //   location: "Chicago, IL",
+  // },
 ];
 
 export default function EventsScreen() {
@@ -133,29 +132,11 @@ export default function EventsScreen() {
           />
         </View>
         <View className="gap-3">
-          <ThemedText type="subtitle">Your joined events</ThemedText>
+          <Text className="text-xl font-bold text-gray-900 dark:text-gray-100">Upcoming Events</Text>
           {isLoading ? (
-            <View
-              style={[
-                styles.joinedCard,
-                {
-                  backgroundColor: colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
-                },
-              ]}
-            >
-              <ActivityIndicator size="small" color={palette.tint} />
-            </View>
+            <ActivityIndicator size="small" color={palette.tint} />
           ) : joinedEvents.length === 0 ? (
-            <View
-              style={[
-                styles.joinedCard,
-                {
-                  backgroundColor: colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
-                },
-              ]}
-            >
-              <ThemedText className="text-gray-500 dark:text-gray-300">Events you join will appear here.</ThemedText>
-            </View>
+            <NoEventsBanner />
           ) : (
             joinedEvents.map((event) => <EventCard event={event} onPress={() => {}} />)
           )}
