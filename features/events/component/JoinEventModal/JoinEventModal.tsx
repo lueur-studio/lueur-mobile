@@ -1,4 +1,5 @@
 import { ThemedText } from "@/components/themed-text";
+import CancelButton from "@/components/ui/AppButton/CancelButton/CancelButton";
 import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
@@ -99,9 +100,7 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
           </View>
 
           {/* CANCEL */}
-          <Pressable className="items-center active:opacity-85" onPress={onClose}>
-            <ThemedText type="link">Cancel</ThemedText>
-          </Pressable>
+          <CancelButton onPress={onClose} />
         </View>
       </View>
     </Modal>
