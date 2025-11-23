@@ -2,9 +2,9 @@ import { ThemedText } from "@/components/themed-text";
 import CancelButton from "@/components/ui/AppButton/CancelButton/CancelButton";
 import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
 import AppTextInput from "@/components/ui/AppTextInput/AppTextInput";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
+import QRButton from "../QRButton/QRButton";
 
 type JoinEventModalProps = {
   visible: boolean;
@@ -55,23 +55,7 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
           </View>
 
           {/* QR BUTTON */}
-          <Pressable
-            className="flex-row items-center gap-3 p-4 rounded-xl border active:opacity-85"
-            style={[
-              {
-                borderColor: colorScheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)",
-              },
-            ]}
-            onPress={() => Alert.alert("Camera coming soon", "The QR scanner is being wired up with the camera team.")}
-          >
-            <MaterialCommunityIcons name="camera" size={22} color={palette.tint} />
-            <View className="flex-1">
-              <ThemedText type="defaultSemiBold">Scan QR code</ThemedText>
-              <ThemedText className="text-gray-500 dark:text-gray-300">
-                Opens your camera to scan an event invite.
-              </ThemedText>
-            </View>
-          </Pressable>
+          <QRButton />
 
           {/* INPUT BLOCK */}
           <View className="gap-2">
