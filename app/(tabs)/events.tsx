@@ -162,30 +162,6 @@ export default function EventsScreen() {
         </View>
 
         <View className="gap-3">
-          <View className="flex-row items-center justify-between">
-            <ThemedText type="subtitle">All events</ThemedText>
-            <Pressable onPress={handleRefresh}>
-              <ThemedText type="link">Refresh</ThemedText>
-            </Pressable>
-          </View>
-
-          {isLoading ? (
-            <ActivityIndicator size="large" color={palette.tint} />
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-              {events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  palette={palette}
-                  onPress={() => Alert.alert("Event", event.title)}
-                />
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        <View className="gap-3">
           <ThemedText type="subtitle">Your joined events</ThemedText>
           {isLoading ? (
             <View
@@ -210,36 +186,7 @@ export default function EventsScreen() {
               <ThemedText className="text-gray-500 dark:text-gray-300">Events you join will appear here.</ThemedText>
             </View>
           ) : (
-            joinedEvents.map((event) => (
-              <View
-                key={`joined-${event.id}`}
-                style={[
-                  styles.joinedCard,
-                  {
-                    backgroundColor: colorScheme === "dark" ? "#1F2125" : "#f5f5f7",
-                  },
-                ]}
-              >
-                <View className="flex-1 gap-1">
-                  <ThemedText type="defaultSemiBold">{event.title}</ThemedText>
-                  <ThemedText className="text-gray-500 dark:text-gray-300">
-                    {formatEventDate(event.date)} • {event.location}
-                  </ThemedText>
-                  <ThemedText className="text-gray-500 dark:text-gray-300">{event.attendees} attendees</ThemedText>
-                </View>
-                <Pressable
-                  style={styles.secondaryButton}
-                  onPress={() =>
-                    Alert.alert(
-                      "Event details coming soon",
-                      "The event detail experience is part of the next milestone.",
-                    )
-                  }
-                >
-                  <ThemedText type="link">View</ThemedText>
-                </Pressable>
-              </View>
-            ))
+            joinedEvents.map((event) => <EventCard event={event} onPress={() => {}} />)
           )}
         </View>
       </ScrollView>
