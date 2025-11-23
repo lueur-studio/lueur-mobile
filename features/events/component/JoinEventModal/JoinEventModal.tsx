@@ -1,7 +1,7 @@
 import CancelButton from "@/components/ui/AppButton/CancelButton/CancelButton";
 import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
 import AppTextInput from "@/components/ui/AppTextInput/AppTextInput";
-import { H2 } from "@/components/ui/Heading/Heading";
+import { H2 } from "@/components/ui/ThemedText/Heading/Heading";
 import { ThemedText } from "@/components/ui/ThemedText/ThemedText";
 import { useEffect, useState } from "react";
 import { Modal, View } from "react-native";
