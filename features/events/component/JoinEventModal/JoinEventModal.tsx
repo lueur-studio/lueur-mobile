@@ -1,5 +1,5 @@
 import { ThemedText } from "@/components/themed-text";
-import PrimaryButton from "@/components/ui/PrimaryButton/PrimaryButton";
+import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
