@@ -3,7 +3,7 @@ import CancelButton from "@/components/ui/AppButton/CancelButton/CancelButton";
 import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton";
 import AppTextInput from "@/components/ui/AppTextInput/AppTextInput";
 import { useEffect, useState } from "react";
-import { Modal, StyleSheet, View } from "react-native";
+import { Modal, View } from "react-native";
 import QRButton from "../QRButton/QRButton";
 
 type JoinEventModalProps = {
@@ -33,20 +33,10 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
     onJoinLink(inviteLink.trim());
   };
 
-  const placeholderColor = colorScheme === "dark" ? "#94A3B8" : "#94A3B8";
-
   return (
     <Modal animationType="slide" visible={visible} transparent>
-      <View style={styles.backdrop}>
-        <View
-          style={[
-            styles.modal,
-            { "--tint": palette.tint } as any,
-            { backgroundColor: colorScheme === "dark" ? "#181a1f" : "#fff" },
-          ]}
-          className="p-6 gap-5"
-        >
-          {/* HEADER */}
+      <View className="flex-1 justify-end bg-black/45">
+        <View className="p-6 gap-5 rounded-2xl p-4 bg-ui-background dark:bg-dark-background">
           <View className="gap-1">
             <ThemedText type="subtitle">Join an event</ThemedText>
             <ThemedText className="text-gray-500 dark:text-gray-300">
@@ -82,15 +72,3 @@ export default function JoinEventModal({ visible, onClose, onJoinLink, palette, 
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
-  modal: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-  },
-});
