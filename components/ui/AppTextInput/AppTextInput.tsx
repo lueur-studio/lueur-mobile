@@ -2,11 +2,11 @@ import { TextInput } from "react-native";
 
 type AppTextInputProps = {
   value: string;
-  placeholder: string;
+  placeholder?: string;
   onChangeText: (text: string) => void;
 };
 
-const AppTextInput = ({ value, placeholder, onChangeText }: AppTextInputProps) => (
+const AppTextInput = ({ value, placeholder = "", onChangeText }: AppTextInputProps) => (
   <TextInput
     value={value}
     placeholder={placeholder}
