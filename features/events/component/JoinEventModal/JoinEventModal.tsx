@@ -3,8 +3,8 @@ import PrimaryButton from "@/components/ui/AppButton/PrimaryButton/PrimaryButton
 import AppTextInput from "@/components/ui/AppTextInput/AppTextInput";
 import { H2 } from "@/components/ui/ThemedText/Heading/Heading";
 import { ThemedText } from "@/components/ui/ThemedText/ThemedText";
-import { useEffect, useState } from "react";
 import { Modal, View } from "react-native";
+import { useJoinEventModal } from "../../hooks/useJoinEventModal";
 import QRButton from "../QRButton/QRButton";
 
 type JoinEventModalProps = {
@@ -14,23 +14,7 @@ type JoinEventModalProps = {
 };
 
 const JoinEventModal = ({ visible, onClose, onJoinLink }: JoinEventModalProps) => {
-  const [inviteLink, setInviteLink] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!visible) {
-      setInviteLink("");
-      setError(null);
-    }
-  }, [visible]);
-
-  const handleLinkJoin = () => {
-    if (!inviteLink.trim()) {
-      setError("Please paste the invitation URL.");
-      return;
-    }
-    onJoinLink(inviteLink.trim());
-  };
+  const { inviteLink, error, handleInviteLinkChange, handleInviteLinkSubmit } = useJoinEventModal(visible, onJoinLink);
 
   return (
     <Modal animationType="slide" visible={visible} transparent>
@@ -48,13 +32,10 @@ const JoinEventModal = ({ visible, onClose, onJoinLink }: JoinEventModalProps) =
             <AppTextInput
               value={inviteLink}
               placeholder="https://events.lueur.app/invite/example123"
-              onChangeText={(text) => {
-                setInviteLink(text);
-                setError(null);
-              }}
+              onChangeText={handleInviteLinkChange}
             />
             {error ? <ThemedText className="text-red-500">{error}</ThemedText> : null}
-            <PrimaryButton text="Join with Link" onPress={handleLinkJoin} />
+            <PrimaryButton text="Join with Link" onPress={handleInviteLinkSubmit} />
           </View>
 
           <CancelButton onPress={onClose} />
