@@ -1,8 +1,12 @@
 import { ThemedText } from "@/components/ui/ThemedText/ThemedText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
-const QRButton = () => {
+type QRButtonProps = {
+  onPress: () => void;
+};
+
+const QRButton = ({ onPress }: QRButtonProps) => {
   return (
     <Pressable
       className={`
@@ -11,7 +15,7 @@ const QRButton = () => {
         bg-ui-surfaceHover dark:bg-dark-surfaceHover
         active:opacity-85
       `}
-      onPress={() => Alert.alert("Camera coming soon", "The QR scanner is being wired up with the camera team.")}
+      onPress={onPress}
     >
       <View className="text-text-main dark:text-dark-text">
         <MaterialCommunityIcons name="camera" size={22} color="currentColor" />
