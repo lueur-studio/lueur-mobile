@@ -12,14 +12,20 @@ type EventsListProps = {
 
 // TODO: Implement onPress for EventCard
 const EventsList = ({ title, isLoading, events }: EventsListProps) => (
-  <View className="gap-3">
-    <H2>Upcoming Events</H2>
+  <View className="gap-4">
+    <H2 className="text-xl font-bold">{title}</H2>
     {isLoading ? (
-      <ActivityIndicator size="small" />
+      <View className="py-12 items-center justify-center">
+        <ActivityIndicator size="large" color="#3B82F6" />
+      </View>
     ) : events.length === 0 ? (
       <NoEventsBanner />
     ) : (
-      events.map((event) => <EventCard event={event} onPress={() => {}} key={event.id} />)
+      <View className="gap-4">
+        {events.map((event) => (
+          <EventCard event={event} onPress={() => {}} key={event.id} />
+        ))}
+      </View>
     )}
   </View>
 );

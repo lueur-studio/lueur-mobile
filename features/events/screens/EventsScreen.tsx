@@ -1,124 +1,96 @@
-import { ThemedText } from "@/components/themed-text";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import EventActionCard from "@/features/events/component/EventActionCard/EventActionCard";
 import EventsList from "@/features/events/component/EventsList/EventsList";
 import JoinEventModal from "@/features/events/component/JoinEventModal/JoinEventModal";
 import { Event } from "@/features/events/types";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { getUserEvents, joinEventByUrl } from "@/lib/event";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const MOCK_EVENTS: Event[] = [
-  {
-    id: "art-walk",
-    title: "Downtown Art Walk",
-    description: "Guided stroll through the new mural collection.",
-    date: "2025-02-12T18:30:00Z",
-    attendees: 42,
-    isJoined: true,
-    location: "Austin, TX",
-  },
-  {
-    id: "coffee-lab",
-    title: "Coffee Lab & Tasting",
-    description: "Learn manual brewing while sampling single-origin beans.",
-    date: "2025-02-17T16:00:00Z",
-    attendees: 58,
-    isJoined: false,
-    location: "Seattle, WA",
-  },
-  {
-    id: "photowalk",
-    title: "Sundown Photowalk",
-    description: "Meet other creators for a golden-hour shoot downtown.",
-    date: "2025-02-22T00:30:00Z",
-    attendees: 31,
-    isJoined: false,
-    location: "Los Angeles, CA",
-  },
-  {
-    id: "makers-hub",
-    title: "Makers Hub Open Studio",
-    description: "Bring your project and pair up with new collaborators.",
-    date: "2025-02-28T21:00:00Z",
-    attendees: 76,
-    isJoined: true,
-    location: "Chicago, IL",
-  },
-];
 
 const EventsScreen = () => {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
 
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
-    // Mock GET request latency so the UI reflects the future integration.
-    await new Promise((resolve) => setTimeout(resolve, 650));
-    setEvents(MOCK_EVENTS);
-    setIsLoading(false);
+    try {
+      const fetchedEvents = await getUserEvents();
+      setEvents(
+        fetchedEvents.map((event) => ({
+          ...event,
+          isJoined: true,
+          attendees: 0,
+        })),
+      );
+    } catch (error: any) {
+      console.error("Failed to fetch events:", error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to fetch events");
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
-  useEffect(() => {
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     fetchEvents();
   }, [fetchEvents]);
 
-  const joinedEvents = useMemo(() => events.filter((event) => event.isJoined), [events]);
-
-  const handleJoinViaLink = useCallback(
-    (link: string) => {
-      const timestamp = Date.now();
-      const generatedEvent: Event = {
-        id: `shared-${timestamp}`,
-        title: "Shared Event",
-        description: "Imported via shared link — details sync coming soon.",
-        date: new Date().toISOString(),
-        attendees: 1,
-        isJoined: true,
-        location: link.replace(/^https?:\/\//, "").split("/")[0] ?? "Online",
-      };
-
-      setEvents((prev) => [generatedEvent, ...prev]);
-      setJoinModalVisible(false);
-      Alert.alert("Joined event", "You have joined the shared event.");
-    },
-    [setEvents],
+  useFocusEffect(
+    useCallback(() => {
+      fetchEvents();
+    }, [fetchEvents]),
   );
 
-  return (
-    <View className="flex-1">
-      <ScrollView
-        contentContainerStyle={{
-          paddingTop: Math.max(insets.top, 16),
-          paddingBottom: Math.max(insets.bottom + 16, 32),
-        }}
-      >
-        <View className="px-6 gap-6">
-          <View className="gap-2">
-            <ThemedText type="title">Events</ThemedText>
-            <ThemedText className="text-base text-gray-500 dark:text-gray-300">
-              Browse community events, join via QR, or create your own meetups.
-            </ThemedText>
-          </View>
+  const handleJoinViaLink = useCallback(async (invitationUrl: string) => {
+    try {
+      const event = await joinEventByUrl(invitationUrl);
+      setEvents((prev) => [{ ...event, isJoined: true, attendees: 0 }, ...prev]);
+      setJoinModalVisible(false);
+      Alert.alert("Success", "You have successfully joined the event!");
+    } catch (error: any) {
+      console.error("Failed to join event:", error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to join event");
+    }
+  }, []);
 
-          <View className="flex-row gap-4">
-            <EventActionCard
-              title="Join Event"
-              description="Scan a QR code or enter a link"
-              onPress={() => setJoinModalVisible(true)}
-            />
-            <EventActionCard
-              title="Create Event"
-              description="Draft a title, description, and schedule"
-              onPress={() => router.push("/events/create")}
-            />
-          </View>
-          <EventsList title="Upcoming Events" isLoading={isLoading} events={joinedEvents} />
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        style={[styles.scrollView, isDark ? styles.containerDark : styles.containerLight]}
+        contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 16) + 24 }]}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View style={styles.header}>
+          <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>Events</Text>
+          <Text style={[styles.subtitle, isDark ? styles.subtitleDark : styles.subtitleLight]}>
+            Discover events, join with QR codes or links, and create your own meetups to share with the community.
+          </Text>
         </View>
+
+        <View style={styles.actionCards}>
+          <EventActionCard
+            title="Join Event"
+            description="Scan QR or paste link"
+            onPress={() => setJoinModalVisible(true)}
+          />
+          <EventActionCard
+            title="Create Event"
+            description="Host your own meetup"
+            onPress={() => router.push("/events/create")}
+          />
+        </View>
+
+        <EventsList title="Upcoming Events" isLoading={isLoading} events={events} />
       </ScrollView>
 
       <JoinEventModal
@@ -129,5 +101,52 @@ const EventsScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  containerLight: {
+    backgroundColor: "#F9FAFB",
+  },
+  containerDark: {
+    backgroundColor: "#111827",
+  },
+  content: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+  },
+  subtitleLight: {
+    color: "#6B7280",
+  },
+  subtitleDark: {
+    color: "#9CA3AF",
+  },
+  textLight: {
+    color: "#111827",
+  },
+  textDark: {
+    color: "#F9FAFB",
+  },
+  actionCards: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+});
 
 export default EventsScreen;
