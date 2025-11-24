@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { PanGestureHandler, State, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { Photo, getAllPhotosFromUserEvents } from "@/lib/photo";
@@ -34,7 +35,7 @@ export default function GalleryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<number>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [viewingPhoto, setViewingPhoto] = useState<Photo | null>(null);
+  const [viewingPhotoIndex, setViewingPhotoIndex] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
   useFocusEffect(
@@ -86,7 +87,8 @@ export default function GalleryScreen() {
     if (isSelectionMode) {
       togglePhotoSelection(photo.id);
     } else {
-      setViewingPhoto(photo);
+      const idx = photos.findIndex((p) => p.id === photo.id);
+      setViewingPhotoIndex(idx);
     }
   };
 
@@ -150,7 +152,7 @@ export default function GalleryScreen() {
       await MediaLibrary.createAssetAsync(downloadedFile.uri);
 
       Alert.alert("Success", "Photo downloaded successfully!");
-      setViewingPhoto(null);
+      setViewingPhotoIndex(null);
     } catch (error: any) {
       console.error("Failed to download photo:", error);
       Alert.alert("Error", "Failed to download photo");
@@ -160,120 +162,164 @@ export default function GalleryScreen() {
   };
 
   return (
-    <View style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <View>
-          <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>Gallery</Text>
-          <Text style={[styles.subtitle, isDark ? styles.textMuted : styles.textMutedLight]}>
-            {photos.length} {photos.length === 1 ? "photo" : "photos"}
-          </Text>
-        </View>
-
-        {isSelectionMode && (
-          <View style={styles.headerActions}>
-            <TouchableOpacity onPress={selectAll} style={styles.headerButton}>
-              <Text style={styles.headerButtonText}>Select All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={cancelSelection} style={styles.headerButton}>
-              <Text style={styles.headerButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      {/* Photos Grid */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3B82F6" />
-          </View>
-        ) : photos.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="images-outline" size={64} color={isDark ? "#6B7280" : "#9CA3AF"} />
-            <Text style={[styles.emptyText, isDark ? styles.textMuted : styles.textMutedLight]}>No photos yet</Text>
-            <Text style={[styles.emptySubtext, isDark ? styles.textMuted : styles.textMutedLight]}>
-              Photos from your events will appear here
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}>
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+          <View>
+            <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>Gallery</Text>
+            <Text style={[styles.subtitle, isDark ? styles.textMuted : styles.textMutedLight]}>
+              {photos.length} {photos.length === 1 ? "photo" : "photos"}
             </Text>
           </View>
-        ) : (
-          <View style={styles.grid}>
-            {photos.map((photo) => (
-              <Pressable
-                key={photo.id}
-                style={styles.photoContainer}
-                onPress={() => handlePhotoPress(photo)}
-                onLongPress={() => handleLongPress(photo.id)}
-              >
-                <Image source={{ uri: photo.image_url }} style={styles.photo} />
-                {isSelectionMode && (
-                  <View style={styles.selectionOverlay}>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        selectedPhotos.has(photo.id) ? styles.checkboxSelected : styles.checkboxUnselected,
-                      ]}
-                    >
-                      {selectedPhotos.has(photo.id) && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                    </View>
-                  </View>
-                )}
-              </Pressable>
-            ))}
-          </View>
-        )}
-      </ScrollView>
 
-      {/* Download FAB */}
-      {isSelectionMode && selectedPhotos.size > 0 && (
-        <TouchableOpacity
-          style={[styles.fab, isDownloading && styles.fabDisabled]}
-          onPress={downloadPhotos}
-          disabled={isDownloading}
-        >
-          {isDownloading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <>
-              <Ionicons name="download" size={24} color="#FFFFFF" />
-              <Text style={styles.fabText}>{selectedPhotos.size}</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      )}
-
-      {/* Full Image Modal */}
-      <Modal visible={viewingPhoto !== null} transparent animationType="fade">
-        <View style={styles.modalContainer}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setViewingPhoto(null)} />
-          {viewingPhoto && (
-            <>
-              <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={() => setViewingPhoto(null)} style={styles.modalCloseButton}>
-                  <Ionicons name="close" size={28} color="#FFFFFF" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => downloadSinglePhoto(viewingPhoto)}
-                  style={styles.modalDownloadButton}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Ionicons name="download" size={24} color="#FFFFFF" />
-                  )}
-                </TouchableOpacity>
-              </View>
-              <Image source={{ uri: viewingPhoto.image_url }} style={styles.fullImage} resizeMode="contain" />
-            </>
+          {isSelectionMode && (
+            <View style={styles.headerActions}>
+              <TouchableOpacity onPress={selectAll} style={styles.headerButton}>
+                <Text style={styles.headerButtonText}>Select All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={cancelSelection} style={styles.headerButton}>
+                <Text style={styles.headerButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
-      </Modal>
-    </View>
+
+        {/* Photos Grid */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#3B82F6" />
+            </View>
+          ) : photos.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="images-outline" size={64} color={isDark ? "#6B7280" : "#9CA3AF"} />
+              <Text style={[styles.emptyText, isDark ? styles.textMuted : styles.textMutedLight]}>No photos yet</Text>
+              <Text style={[styles.emptySubtext, isDark ? styles.textMuted : styles.textMutedLight]}>
+                Photos from your events will appear here
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.grid}>
+              {photos.map((photo) => (
+                <Pressable
+                  key={photo.id}
+                  style={styles.photoContainer}
+                  onPress={() => handlePhotoPress(photo)}
+                  onLongPress={() => handleLongPress(photo.id)}
+                >
+                  <Image source={{ uri: photo.image_url }} style={styles.photo} />
+                  {isSelectionMode && (
+                    <View style={styles.selectionOverlay}>
+                      <View
+                        style={[
+                          styles.checkbox,
+                          selectedPhotos.has(photo.id) ? styles.checkboxSelected : styles.checkboxUnselected,
+                        ]}
+                      >
+                        {selectedPhotos.has(photo.id) && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                      </View>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Download FAB */}
+        {isSelectionMode && selectedPhotos.size > 0 && (
+          <TouchableOpacity
+            style={[styles.fab, isDownloading && styles.fabDisabled]}
+            onPress={downloadPhotos}
+            disabled={isDownloading}
+          >
+            {isDownloading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="download" size={24} color="#FFFFFF" />
+                <Text style={styles.fabText}>{selectedPhotos.size}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {/* Full Image Modal with swipe navigation */}
+        <Modal visible={viewingPhotoIndex !== null} transparent animationType="fade">
+          <View style={styles.modalContainer}>
+            <Pressable style={styles.modalBackdrop} onPress={() => setViewingPhotoIndex(null)} />
+            {viewingPhotoIndex !== null && photos[viewingPhotoIndex] && (
+              <>
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity onPress={() => setViewingPhotoIndex(null)} style={styles.modalCloseButton}>
+                    <Ionicons name="close" size={28} color="#FFFFFF" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => downloadSinglePhoto(photos[viewingPhotoIndex])}
+                    style={styles.modalDownloadButton}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Ionicons name="download" size={24} color="#FFFFFF" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {/* Navigation buttons and image counter */}
+                <View style={styles.modalNavContainer}>
+                  <TouchableOpacity
+                    style={[styles.modalNavButton, viewingPhotoIndex === 0 && styles.modalNavButtonDisabled]}
+                    onPress={() => viewingPhotoIndex > 0 && setViewingPhotoIndex(viewingPhotoIndex - 1)}
+                    disabled={viewingPhotoIndex === 0}
+                  >
+                    <Ionicons name="chevron-back" size={36} color="#FFFFFF" />
+                  </TouchableOpacity>
+                  <Text style={styles.modalNavText}>
+                    {viewingPhotoIndex + 1} / {photos.length}
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.modalNavButton,
+                      viewingPhotoIndex === photos.length - 1 && styles.modalNavButtonDisabled,
+                    ]}
+                    onPress={() => viewingPhotoIndex < photos.length - 1 && setViewingPhotoIndex(viewingPhotoIndex + 1)}
+                    disabled={viewingPhotoIndex === photos.length - 1}
+                  >
+                    <Ionicons name="chevron-forward" size={36} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+                {/* Swipe navigation */}
+                <PanGestureHandler
+                  onHandlerStateChange={({ nativeEvent }) => {
+                    if (nativeEvent.state === State.END) {
+                      if (nativeEvent.translationX < -50 && viewingPhotoIndex < photos.length - 1) {
+                        setViewingPhotoIndex(viewingPhotoIndex + 1);
+                      } else if (nativeEvent.translationX > 50 && viewingPhotoIndex > 0) {
+                        setViewingPhotoIndex(viewingPhotoIndex - 1);
+                      }
+                    }
+                  }}
+                >
+                  <View style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}>
+                    <Image
+                      source={{ uri: photos[viewingPhotoIndex].image_url }}
+                      style={styles.fullImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                </PanGestureHandler>
+              </>
+            )}
+          </View>
+        </Modal>
+      </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -464,5 +510,29 @@ const styles = StyleSheet.create({
   },
   textMuted: {
     color: "#9CA3AF",
+  },
+  modalNavContainer: {
+    position: "absolute",
+    bottom: 60,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+    gap: 16,
+  },
+  modalNavButton: {
+    padding: 8,
+    opacity: 1,
+  },
+  modalNavButtonDisabled: {
+    opacity: 0.3,
+  },
+  modalNavText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginHorizontal: 12,
   },
 });
