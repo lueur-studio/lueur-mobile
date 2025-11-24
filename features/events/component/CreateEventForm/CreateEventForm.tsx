@@ -210,6 +210,16 @@ const CreateEventForm = () => {
         </View>
 
         <View style={styles.form}>
+          {/* Overlay to close pickers when clicking outside */}
+          {(showDatePicker || showTimePicker) && (
+            <Pressable
+              style={styles.pickerOverlay}
+              onPress={() => {
+                setShowDatePicker(false);
+                setShowTimePicker(false);
+              }}
+            />
+          )}
           <Input label="Event Title" placeholder="Enter event name" value={title} onChangeText={setTitle} />
 
           <Input
@@ -223,7 +233,10 @@ const CreateEventForm = () => {
             <Text style={[styles.label, isDark ? styles.labelDark : styles.labelLight]}>Date & Time</Text>
             <View style={styles.dateTimeContainer}>
               <Pressable
-                onPress={() => setShowDatePicker(true)}
+                onPress={() => {
+                  setShowTimePicker(false);
+                  setShowDatePicker(true);
+                }}
                 style={[styles.dateTimeButton, isDark ? styles.dateTimeButtonDark : styles.dateTimeButtonLight]}
               >
                 <Ionicons name="calendar-outline" size={20} color="#6B7280" />
@@ -233,7 +246,10 @@ const CreateEventForm = () => {
               </Pressable>
 
               <Pressable
-                onPress={() => setShowTimePicker(true)}
+                onPress={() => {
+                  setShowDatePicker(false);
+                  setShowTimePicker(true);
+                }}
                 style={[styles.dateTimeButton, isDark ? styles.dateTimeButtonDark : styles.dateTimeButtonLight]}
               >
                 <Ionicons name="time-outline" size={20} color="#6B7280" />
@@ -245,22 +261,26 @@ const CreateEventForm = () => {
           </View>
 
           {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={handleDateChange}
-              minimumDate={new Date()}
-            />
+            <View style={styles.pickerWrapper} pointerEvents="box-none">
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+              />
+            </View>
           )}
 
           {showTimePicker && (
-            <DateTimePicker
-              value={date}
-              mode="time"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={handleTimeChange}
-            />
+            <View style={styles.pickerWrapper} pointerEvents="box-none">
+              <DateTimePicker
+                value={date}
+                mode="time"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleTimeChange}
+              />
+            </View>
           )}
 
           {Platform.OS === "ios" && (showDatePicker || showTimePicker) && (
@@ -287,6 +307,18 @@ const CreateEventForm = () => {
 };
 
 const styles = StyleSheet.create({
+  pickerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.01)",
+    zIndex: 10,
+  },
+  pickerWrapper: {
+    zIndex: 20,
+  },
   container: {
     flex: 1,
   },
