@@ -217,9 +217,6 @@ const CreateEventForm = () => {
             placeholder="What's this event about?"
             value={description}
             onChangeText={setDescription}
-            multiline
-            numberOfLines={4}
-            style={{ minHeight: 100, textAlignVertical: "top" }}
           />
 
           <View style={styles.inputContainer}>
