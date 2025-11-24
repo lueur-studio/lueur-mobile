@@ -18,6 +18,8 @@ import { Event } from "@/features/events/types";
 import { getEventById, updateEvent } from "@/lib/event";
 import EditEventModal from "@/features/events/component/EditEventModal/EditEventModal";
 import { useAuth } from "@/context/auth-context";
+import * as ImagePicker from "expo-image-picker";
+import { Photo, getPhotosByEvent, uploadPhoto } from "@/lib/photo";
 
 const EventDetailScreen = () => {
   const router = useRouter();
@@ -30,14 +32,8 @@ const EventDetailScreen = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
-
-  // Mock images for now
-  const [images, setImages] = useState<string[]>([
-    "https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=Event+Photo+1",
-    "https://via.placeholder.com/300x200/8B5CF6/FFFFFF?text=Event+Photo+2",
-    "https://via.placeholder.com/300x200/EC4899/FFFFFF?text=Event+Photo+3",
-    "https://via.placeholder.com/300x200/10B981/FFFFFF?text=Event+Photo+4",
-  ]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -50,6 +46,10 @@ const EventDetailScreen = () => {
       setIsLoading(true);
       const eventData = await getEventById(Number(id));
       setEvent(eventData);
+
+      // Fetch photos for the event
+      const eventPhotos = await getPhotosByEvent(Number(id));
+      setPhotos(eventPhotos);
     } catch (error: any) {
       console.error("Failed to fetch event details:", error);
       Alert.alert("Error", "Failed to load event details");
@@ -76,9 +76,48 @@ const EventDetailScreen = () => {
     };
   };
 
-  const handleUploadImage = () => {
-    Alert.alert("Upload Image", "Image upload functionality will be implemented later");
-    // TODO: Implement image picker and upload
+  const handleUploadImage = async () => {
+    try {
+      // Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert("Permission Required", "Please grant photo library access to upload images.");
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images" as any,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setIsUploadingPhoto(true);
+        const asset = result.assets[0];
+
+        // Get file extension from URI
+        const uriParts = asset.uri.split(".");
+        const fileType = uriParts[uriParts.length - 1];
+        const fileName = `event_photo_${Date.now()}.${fileType}`;
+        const mimeType = `image/${fileType}`;
+
+        // Upload photo
+        await uploadPhoto(Number(id), asset.uri, fileName, mimeType);
+
+        // Refetch event details and photos
+        await fetchEventDetails();
+
+        Alert.alert("Success", "Photo uploaded successfully!");
+      }
+    } catch (error: any) {
+      console.error("Failed to upload photo:", error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to upload photo");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const handleUpdateEvent = async (data: { title: string; description: string; date: string }) => {
@@ -167,13 +206,19 @@ const EventDetailScreen = () => {
           <View style={styles.photosSection}>
             <View style={styles.photosSectionHeader}>
               <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>Event Photos</Text>
-              <TouchableOpacity onPress={handleUploadImage} style={styles.uploadButton}>
-                <Ionicons name="add-circle" size={24} color="#3B82F6" />
-                <Text style={styles.uploadButtonText}>Add Photo</Text>
+              <TouchableOpacity onPress={handleUploadImage} style={styles.uploadButton} disabled={isUploadingPhoto}>
+                {isUploadingPhoto ? (
+                  <ActivityIndicator size="small" color="#3B82F6" />
+                ) : (
+                  <>
+                    <Ionicons name="add-circle" size={24} color="#3B82F6" />
+                    <Text style={styles.uploadButtonText}>Add Photo</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
 
-            {images.length === 0 ? (
+            {photos.length === 0 ? (
               <View style={[styles.emptyPhotos, isDark ? styles.cardDark : styles.cardLight]}>
                 <Ionicons name="images-outline" size={48} color={isDark ? "#6B7280" : "#9CA3AF"} />
                 <Text style={[styles.emptyPhotosText, isDark ? styles.textMuted : styles.textMutedLight]}>
@@ -185,9 +230,9 @@ const EventDetailScreen = () => {
               </View>
             ) : (
               <View style={styles.photosGrid}>
-                {images.map((imageUrl, index) => (
-                  <Pressable key={index} style={styles.photoItem}>
-                    <Image source={{ uri: imageUrl }} style={styles.photoImage} />
+                {photos.map((photo) => (
+                  <Pressable key={photo.id} style={styles.photoItem}>
+                    <Image source={{ uri: photo.image_url }} style={styles.photoImage} />
                   </Pressable>
                 ))}
               </View>
