@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       const result = await authService.signup(data);
       setUser(result.user);
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)/gallery");
     } catch (error: any) {
       setError(error.message);
       throw error;
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       const result = await authService.signin(data);
       setUser(result.user);
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)/gallery");
     } catch (error: any) {
       setError(error.message);
       throw error;

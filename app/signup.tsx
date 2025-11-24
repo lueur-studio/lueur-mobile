@@ -44,7 +44,7 @@ export default function SignupScreen() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/(tabs)/home");
+      router.replace("/(tabs)/gallery");
     }
   }, [isAuthenticated]);
 
