@@ -283,7 +283,7 @@ const CreateEventForm = () => {
             </View>
           )}
 
-          {Platform.OS === "ios" && (showDatePicker || showTimePicker) && (
+          {/* {Platform.OS === "ios" && (showDatePicker || showTimePicker) && (
             <Button
               title="Done"
               onPress={() => {
@@ -291,7 +291,7 @@ const CreateEventForm = () => {
                 setShowTimePicker(false);
               }}
             />
-          )}
+          )} */}
         </View>
 
         {error && (
