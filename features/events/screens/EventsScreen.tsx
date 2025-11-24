@@ -2,10 +2,12 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import EventActionCard from "@/features/events/component/EventActionCard/EventActionCard";
 import EventsList from "@/features/events/component/EventsList/EventsList";
 import JoinEventModal from "@/features/events/component/JoinEventModal/JoinEventModal";
+import EventInvitationModal from "@/features/events/component/EventInvitationModal/EventInvitationModal";
 import { Event } from "@/features/events/types";
 import { getUserEvents, joinEventByUrl } from "@/lib/event";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { useCallback, useRef, useState } from "react";
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,11 +16,15 @@ const EventsScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const isJoiningRef = useRef(false);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [invitationModalVisible, setInvitationModalVisible] = useState(false);
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
@@ -28,7 +34,6 @@ const EventsScreen = () => {
         fetchedEvents.map((event) => ({
           ...event,
           isJoined: true,
-          attendees: 0,
         })),
       );
     } catch (error: any) {
@@ -51,16 +56,45 @@ const EventsScreen = () => {
     }, [fetchEvents]),
   );
 
-  const handleJoinViaLink = useCallback(async (invitationUrl: string) => {
-    try {
-      const event = await joinEventByUrl(invitationUrl);
-      setEvents((prev) => [{ ...event, isJoined: true, attendees: 0 }, ...prev]);
-      setJoinModalVisible(false);
-      Alert.alert("Success", "You have successfully joined the event!");
-    } catch (error: any) {
-      console.error("Failed to join event:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to join event");
-    }
+  const handleJoinViaLink = useCallback(
+    async (invitationUrl: string) => {
+      if (isJoiningRef.current) return; // Prevent duplicate calls
+
+      isJoiningRef.current = true;
+      try {
+        const result = await joinEventByUrl(invitationUrl);
+        setJoinModalVisible(false);
+        // Check if the event was already joined by comparing with existing events
+        const wasAlreadyJoined = events.some((event) => event.id === result.id);
+
+        // Refetch events to get the updated list
+        await fetchEvents();
+
+        // Show appropriate alert
+        if (wasAlreadyJoined) {
+          Alert.alert("Already Joined", "You are already a member of this event.");
+        } else {
+          Alert.alert("Success", "You have successfully joined the event!");
+        }
+      } catch (error: any) {
+        console.error("Failed to join event:", error);
+        const errorMessage = error.response?.data?.message || "Failed to join event";
+        Alert.alert("Error", errorMessage);
+      } finally {
+        isJoiningRef.current = false;
+      }
+    },
+    [fetchEvents, events],
+  );
+
+  const handleEventShare = useCallback((event: Event) => {
+    setSelectedEvent(event);
+    setInvitationModalVisible(true);
+  }, []);
+
+  const handleCloseInvitationModal = useCallback(() => {
+    setInvitationModalVisible(false);
+    setSelectedEvent(null);
   }, []);
 
   return (
@@ -90,7 +124,13 @@ const EventsScreen = () => {
           />
         </View>
 
-        <EventsList title="Upcoming Events" isLoading={isLoading} events={events} />
+        <EventsList
+          title="Upcoming Events"
+          isLoading={isLoading}
+          events={events}
+          onEventShare={handleEventShare}
+          currentUserId={user?.id ? parseInt(user.id) : undefined}
+        />
       </ScrollView>
 
       <JoinEventModal
@@ -98,6 +138,14 @@ const EventsScreen = () => {
         onClose={() => setJoinModalVisible(false)}
         onJoinLink={handleJoinViaLink}
       />
+
+      {selectedEvent && (
+        <EventInvitationModal
+          visible={invitationModalVisible}
+          onClose={handleCloseInvitationModal}
+          event={selectedEvent}
+        />
+      )}
     </View>
   );
 };

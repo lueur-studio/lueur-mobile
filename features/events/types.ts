@@ -7,6 +7,9 @@ export type Event = {
   created_by: number;
   created_at: string;
   updated_at: string;
-  attendees?: number;
+  eventAccess?: {
+    access_level: number;
+  }[];
   isJoined?: boolean;
+  userAccessLevel?: number;
 };
