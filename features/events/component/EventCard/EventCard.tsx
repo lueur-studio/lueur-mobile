@@ -44,7 +44,9 @@ const EventCard = ({ event, onPress, onShare }: EventCardProps) => {
       <View className="gap-3">
         {/* Header with Title and Share Button */}
         <View className="flex-row justify-between items-start">
-          <H3 className="text-lg font-bold flex-1 pr-2">{event.title}</H3>
+          <View className="flex-1 pr-2">
+            <H3>{event.title}</H3>
+          </View>
           {onShare && (
             <TouchableOpacity
               onPress={handleSharePress}
