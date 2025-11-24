@@ -173,16 +173,23 @@ export default function GalleryScreen() {
             </Text>
           </View>
 
-          {isSelectionMode && (
-            <View style={styles.headerActions}>
-              <TouchableOpacity onPress={selectAll} style={styles.headerButton}>
-                <Text style={styles.headerButtonText}>Select All</Text>
+          <View style={styles.headerActions}>
+            {!isSelectionMode && (
+              <TouchableOpacity onPress={() => setIsSelectionMode(true)} style={styles.headerButton}>
+                <Text style={styles.headerButtonText}>Select</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={cancelSelection} style={styles.headerButton}>
-                <Text style={styles.headerButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            )}
+            {isSelectionMode && (
+              <>
+                <TouchableOpacity onPress={selectAll} style={styles.headerButton}>
+                  <Text style={styles.headerButtonText}>Select All</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={cancelSelection} style={styles.headerButton}>
+                  <Text style={styles.headerButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
         </View>
 
         {/* Photos Grid */}
