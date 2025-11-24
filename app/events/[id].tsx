@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,11 +16,18 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Event } from "@/features/events/types";
-import { getEventById, updateEvent } from "@/lib/event";
+import {
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  leaveEvent,
+  getEventParticipants,
+  removeUserFromEvent,
+} from "@/lib/event";
 import EditEventModal from "@/features/events/component/EditEventModal/EditEventModal";
 import { useAuth } from "@/context/auth-context";
 import * as ImagePicker from "expo-image-picker";
-import { Photo, getPhotosByEvent, uploadPhoto } from "@/lib/photo";
+import { Photo, getPhotosByEvent, uploadPhoto, deletePhoto } from "@/lib/photo";
 
 const EventDetailScreen = () => {
   const router = useRouter();
@@ -34,6 +42,8 @@ const EventDetailScreen = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [participants, setParticipants] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -50,6 +60,10 @@ const EventDetailScreen = () => {
       // Fetch photos for the event
       const eventPhotos = await getPhotosByEvent(Number(id));
       setPhotos(eventPhotos);
+
+      // Fetch participants
+      const eventParticipants = await getEventParticipants(Number(id));
+      setParticipants(eventParticipants);
     } catch (error: any) {
       console.error("Failed to fetch event details:", error);
       Alert.alert("Error", "Failed to load event details");
@@ -132,7 +146,113 @@ const EventDetailScreen = () => {
     }
   };
 
+  const handleDeleteEvent = () => {
+    Alert.alert("Delete Event", "Are you sure you want to delete this event? This action cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteEvent(Number(id));
+            Alert.alert("Success", "Event deleted successfully");
+            router.replace("/(tabs)/events");
+          } catch (error: any) {
+            console.error("Failed to delete event:", error);
+            Alert.alert("Error", error.response?.data?.message || "Failed to delete event");
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleLeaveEvent = () => {
+    Alert.alert("Leave Event", "Are you sure you want to leave this event?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Leave",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await leaveEvent(Number(id));
+            Alert.alert("Success", "You have left the event");
+            router.replace("/(tabs)/events");
+          } catch (error: any) {
+            console.error("Failed to leave event:", error);
+            Alert.alert("Error", error.response?.data?.message || "Failed to leave event");
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleDeletePhoto = (photoId: number, photoUserId?: number) => {
+    const canDelete = isAdmin || photoUserId === user?.id;
+
+    if (!canDelete) {
+      Alert.alert("Permission Denied", "You can only delete your own photos");
+      return;
+    }
+
+    Alert.alert("Delete Photo", "Are you sure you want to delete this photo?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePhoto(photoId);
+            Alert.alert("Success", "Photo deleted successfully");
+            await fetchEventDetails();
+          } catch (error: any) {
+            console.error("Failed to delete photo:", error);
+            Alert.alert("Error", error.response?.data?.message || "Failed to delete photo");
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleRemoveMember = (participantUserId: number) => {
+    const participant = participants.find((p) => p.user_id === participantUserId);
+
+    Alert.alert(
+      "Remove Member",
+      `Are you sure you want to remove ${participant?.user?.username || "this member"} from the event?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await removeUserFromEvent(Number(id), participantUserId);
+              Alert.alert("Success", "Member removed successfully");
+              await fetchEventDetails();
+            } catch (error: any) {
+              console.error("Failed to remove member:", error);
+              Alert.alert("Error", error.response?.data?.message || "Failed to remove member");
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const isAdmin = event?.userAccessLevel === 0;
+
+  const getAccessLevelLabel = (accessLevel: number) => {
+    switch (accessLevel) {
+      case 0:
+        return "Admin";
+      case 1:
+        return "Contributor";
+      case 2:
+        return "Viewer";
+      default:
+        return accessLevel;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -158,7 +278,7 @@ const EventDetailScreen = () => {
   }
 
   const { date, time } = formatDateTime(event.date);
-
+  console.log(participants);
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -231,14 +351,100 @@ const EventDetailScreen = () => {
             ) : (
               <View style={styles.photosGrid}>
                 {photos.map((photo) => (
-                  <Pressable key={photo.id} style={styles.photoItem}>
+                  <View key={photo.id} style={styles.photoItem}>
                     <Image source={{ uri: photo.image_url }} style={styles.photoImage} />
-                  </Pressable>
+                    {(isAdmin || photo.added_by === user?.id || photo.user_id === user?.id) && (
+                      <TouchableOpacity
+                        style={styles.deletePhotoButton}
+                        onPress={() => handleDeletePhoto(photo.id, photo.added_by || photo.user_id)}
+                      >
+                        <Ionicons name="trash" size={16} color="#FFFFFF" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 ))}
               </View>
             )}
           </View>
+
+          {/* Members Section */}
+          {isAdmin && (
+            <View style={styles.membersSection}>
+              <View style={styles.membersSectionHeader}>
+                <Text style={[styles.sectionTitle, isDark ? styles.textDark : styles.textLight]}>Members</Text>
+                <TouchableOpacity onPress={() => setShowMembersModal(true)} style={styles.viewMembersButton}>
+                  <Text style={styles.viewMembersButtonText}>View All ({participants.length})</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#3B82F6" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Action Buttons */}
+          <View style={styles.actionsSection}>
+            {isAdmin ? (
+              <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDeleteEvent}>
+                <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
+                <Text style={styles.deleteButtonText}>Delete Event</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={[styles.actionButton, styles.leaveButton]} onPress={handleLeaveEvent}>
+                <Ionicons name="exit-outline" size={20} color="#FFFFFF" />
+                <Text style={styles.leaveButtonText}>Leave Event</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </ScrollView>
+
+        {/* Members Modal */}
+        <Modal
+          visible={showMembersModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowMembersModal(false)}
+        >
+          <View style={[styles.modalContainer, isDark ? styles.containerDark : styles.containerLight]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, isDark ? styles.textDark : styles.textLight]}>Event Members</Text>
+              <TouchableOpacity onPress={() => setShowMembersModal(false)} style={styles.modalCloseButton}>
+                <Ionicons name="close" size={24} color={isDark ? "#F9FAFB" : "#111827"} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.membersList}>
+              {participants.map((participant) => (
+                <View key={participant.id} style={[styles.memberItem, isDark ? styles.cardDark : styles.cardLight]}>
+                  <View style={styles.memberInfo}>
+                    <View style={styles.memberAvatar}>
+                      <Ionicons name="person" size={20} color="#6366F1" />
+                    </View>
+                    <View style={styles.memberDetails}>
+                      <Text style={[styles.memberName, isDark ? styles.textDark : styles.textLight]}>
+                        {participant.user?.name || "Unknown User"}
+                      </Text>
+                      <Text style={[styles.memberEmail, isDark ? styles.textMuted : styles.textMutedLight]}>
+                        {participant.user?.email}
+                      </Text>
+                      <View style={styles.memberBadge}>
+                        <Text style={styles.memberBadgeText}>{getAccessLevelLabel(participant.access_level)}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  {participant.access_level !== "owner" && (
+                    <TouchableOpacity
+                      style={styles.removeMemberButton}
+                      onPress={() => {
+                        setShowMembersModal(false);
+                        setTimeout(() => handleRemoveMember(participant.user_id), 300);
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </Modal>
 
         {/* Edit Modal */}
         {event && isAdmin && (
@@ -405,6 +611,153 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     backgroundColor: "#E5E7EB",
+  },
+  deletePhotoButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(239, 68, 68, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  membersSection: {
+    gap: 16,
+    marginTop: 8,
+  },
+  membersSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  viewMembersButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#EFF6FF",
+  },
+  viewMembersButtonText: {
+    color: "#3B82F6",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  actionsSection: {
+    marginTop: 24,
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  deleteButton: {
+    backgroundColor: "#EF4444",
+  },
+  deleteButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  leaveButton: {
+    backgroundColor: "#F59E0B",
+  },
+  leaveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalContainer: {
+    flex: 1,
+    paddingTop: 60,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  membersList: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  memberItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  memberInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  memberAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EEF2FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  memberDetails: {
+    flex: 1,
+    gap: 4,
+  },
+  memberName: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  memberEmail: {
+    fontSize: 13,
+  },
+  memberBadge: {
+    alignSelf: "flex-start",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: "#DBEAFE",
+    marginTop: 4,
+  },
+  memberBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#1E40AF",
+    textTransform: "uppercase",
+  },
+  removeMemberButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FEE2E2",
   },
   textLight: {
     color: "#111827",
