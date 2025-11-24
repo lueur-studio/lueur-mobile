@@ -28,6 +28,8 @@ import EditEventModal from "@/features/events/component/EditEventModal/EditEvent
 import { useAuth } from "@/context/auth-context";
 import * as ImagePicker from "expo-image-picker";
 import { Photo, getPhotosByEvent, uploadPhoto, deletePhoto } from "@/lib/photo";
+import { File, Paths } from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
 
 const EventDetailScreen = () => {
   const router = useRouter();
@@ -239,6 +241,25 @@ const EventDetailScreen = () => {
     );
   };
 
+  const handleDownloadSinglePhoto = async (photo: Photo) => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Required", "Please grant media library access to download photos.");
+        return;
+      }
+
+      const downloadedFile = await File.downloadFileAsync(photo.image_url, Paths.cache);
+
+      await MediaLibrary.createAssetAsync(downloadedFile.uri);
+
+      Alert.alert("Success", "Photo downloaded successfully!");
+    } catch (error: any) {
+      console.error("Failed to download photo:", error);
+      Alert.alert("Error", "Failed to download photo");
+    }
+  };
+
   const isAdmin = event?.userAccessLevel === 0;
 
   const getAccessLevelLabel = (accessLevel: number) => {
@@ -353,12 +374,18 @@ const EventDetailScreen = () => {
                 {photos.map((photo) => (
                   <View key={photo.id} style={styles.photoItem}>
                     <Image source={{ uri: photo.image_url }} style={styles.photoImage} />
+                    <TouchableOpacity
+                      style={styles.downloadPhotoButton}
+                      onPress={() => handleDownloadSinglePhoto(photo)}
+                    >
+                      <Ionicons name="download-outline" size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
                     {(isAdmin || photo.added_by === user?.id || photo.user_id === user?.id) && (
                       <TouchableOpacity
                         style={styles.deletePhotoButton}
                         onPress={() => handleDeletePhoto(photo.id, photo.added_by || photo.user_id)}
                       >
-                        <Ionicons name="trash" size={16} color="#FFFFFF" />
+                        <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -612,16 +639,37 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#E5E7EB",
   },
+  downloadPhotoButton: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(59, 130, 246, 0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   deletePhotoButton: {
     position: "absolute",
     top: 8,
     right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(239, 68, 68, 0.9)",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(239, 68, 68, 0.95)",
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   membersSection: {
     gap: 16,
