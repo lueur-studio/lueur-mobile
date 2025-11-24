@@ -1,9 +1,12 @@
 export type Event = {
-  id: string;
+  id: number;
   title: string;
   description: string;
   date: string;
-  attendees: number;
-  isJoined: boolean;
-  location: string;
+  invitation_url: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  attendees?: number;
+  isJoined?: boolean;
 };
