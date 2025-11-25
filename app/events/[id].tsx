@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -46,6 +47,16 @@ const EventDetailScreen = () => {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await fetchEventDetails(); // re-fetch your event, photos, participants
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -317,7 +328,13 @@ const EventDetailScreen = () => {
           )}
         </View>
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#F9FAFB" : "#111827"} />
+          }
+        >
           {/* Event Info Section */}
           <View style={[styles.infoCard, isDark ? styles.cardDark : styles.cardLight]}>
             <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>{event.title}</Text>
