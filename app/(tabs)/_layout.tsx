@@ -1,42 +1,50 @@
-import { Tabs } from "expo-router";
 import React from "react";
-import { HapticTab } from "@/components/haptic-tab";
+import { SafeAreaView } from "react-native";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import GalleryScreen from "./gallery";
+import EventsScreen from "./events";
+import ProfileScreen from "./profile";
+
+const TopTabs = createMaterialTopTabNavigator();
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const activeColor = Colors[colorScheme ?? "light"].tint;
+
+  const screenConfig = [
+    { name: "gallery", title: "Gallery", icon: "photo.fill", component: GalleryScreen },
+    { name: "events", title: "Events", icon: "calendar", component: EventsScreen },
+    { name: "profile", title: "Profile", icon: "person.fill", component: ProfileScreen },
+  ];
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}
-    >
-      <Tabs.Screen
-        name="gallery"
-        options={{
-          title: "Gallery",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="photo.fill" color={color} />,
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors[colorScheme ?? "light"].background }}>
+      <TopTabs.Navigator
+        tabBarPosition="bottom"
+        screenOptions={{
+          tabBarActiveTintColor: activeColor,
+          tabBarInactiveTintColor: Colors[colorScheme ?? "light"].tabIconDefault,
+          tabBarIndicatorStyle: {
+            backgroundColor: "transparent",
+          },
+          lazy: true,
         }}
-      />
-      <Tabs.Screen
-        name="events"
-        options={{
-          title: "Events",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        {screenConfig.map(({ name, title, icon, component }) => (
+          <TopTabs.Screen
+            key={name}
+            name={name}
+            component={component}
+            options={{
+              title: title,
+              tabBarIcon: ({ color }) => <IconSymbol size={28} name={icon as any} color={color} />,
+            }}
+          />
+        ))}
+      </TopTabs.Navigator>
+    </SafeAreaView>
   );
 }
