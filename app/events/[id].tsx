@@ -289,17 +289,9 @@ const EventDetailScreen = () => {
   if (isLoading) {
     return (
       <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}>
-          <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color={isDark ? "#F9FAFB" : "#111827"} />
-            </TouchableOpacity>
-            <Text style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>Event Details</Text>
-          </View>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3B82F6" />
-          </View>
+        <Stack.Screen options={{ title: "Event Details", headerBackTitle: "Back" }} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3B82F6" />
         </View>
       </>
     );
@@ -310,24 +302,22 @@ const EventDetailScreen = () => {
   }
 
   const { date, time } = formatDateTime(event.date);
-  console.log(participants);
+
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen
+        options={{
+          title: "Event Details",
+          headerBackTitle: "Back",
+          headerRight: () =>
+            isAdmin ? (
+              <TouchableOpacity onPress={() => setEditModalVisible(true)} style={styles.editButton}>
+                <Ionicons name="pencil" size={20} color="#3B82F6" />
+              </TouchableOpacity>
+            ) : null,
+        }}
+      />
       <View style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}>
-        {/* Header with Back Button */}
-        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={isDark ? "#F9FAFB" : "#111827"} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, isDark ? styles.textDark : styles.textLight]}>Event Details</Text>
-          {isAdmin && (
-            <TouchableOpacity onPress={() => setEditModalVisible(true)} style={styles.editButton}>
-              <Ionicons name="pencil" size={20} color="#3B82F6" />
-            </TouchableOpacity>
-          )}
-        </View>
-
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.content}
@@ -529,13 +519,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   editButton: {
-    marginLeft: "auto",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 35,
+    height: 35,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#EFF6FF",
   },
   headerTitle: {
     fontSize: 18,
@@ -554,6 +542,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   infoCard: {
+    marginTop: 24,
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
